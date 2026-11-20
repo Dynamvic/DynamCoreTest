@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DynamCore Coach</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<style>
+/* v2.0: fonts are hosted with the app (SIL Open Font License, see fonts/) – no requests to Google */
+@font-face{font-family:"Poppins";font-weight:600;font-style:normal;font-display:swap;src:url(fonts/poppins-600.woff) format("woff")}
+@font-face{font-family:"Poppins";font-weight:700;font-style:normal;font-display:swap;src:url(fonts/poppins-700.woff) format("woff")}
+@font-face{font-family:"Poppins";font-weight:800;font-style:normal;font-display:swap;src:url(fonts/poppins-800.woff) format("woff")}
+@font-face{font-family:"Inter";font-weight:400;font-style:normal;font-display:swap;src:url(fonts/inter-400.woff) format("woff")}
+@font-face{font-family:"Inter";font-weight:500;font-style:normal;font-display:swap;src:url(fonts/inter-500.woff) format("woff")}
+@font-face{font-family:"Inter";font-weight:600;font-style:normal;font-display:swap;src:url(fonts/inter-600.woff) format("woff")}
+/* Coach page: make challenges, read the athletes' shared messages, build the ranking. Same look as the app. */
+:root{--bg:#F5F5F3;--surface:#FFFFFF;--fg:#111214;--muted:#5D616B;--line:#E1E2E5;--soft:#EEEFF1;--accent:#2448C8;--on-accent:#FFFFFF;--ok:#157F4B;--bad:#B42318;
+  --display:"Poppins","Avenir Next","Segoe UI",system-ui,sans-serif;--body:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#0E0F11;--surface:#17181B;--fg:#EDEEF0;--muted:#9BA0AA;--line:#2A2C31;--soft:#202226;--accent:#7D98FF;--on-accent:#0B0D14;--ok:#4CC38A;--bad:#FF7A6E;color-scheme:dark}}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.45}
+main{max-width:860px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 60px;display:grid;gap:16px}
+main>*{min-width:0}
+h1,h2,h3{font-family:var(--display);margin:0;line-height:1.1;text-wrap:balance}
+h1{font-size:28px;font-weight:800}h2{font-size:20px;font-weight:700}
+p{margin:0}.muted{color:var(--muted)}.small{font-size:13.5px}
+header{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+header img{height:40px;width:auto}
+@media (prefers-color-scheme:dark){header img.l{display:none}}@media (prefers-color-scheme:light){header img.d{display:none}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;display:grid;gap:12px;min-width:0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+label{display:grid;gap:4px;font-size:14px;font-weight:600}
+input,select,textarea{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px;width:100%;font-weight:400}
+textarea{min-height:110px;font-family:ui-monospace,Menlo,monospace;font-size:12.5px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button{font:inherit;cursor:pointer}
+.btn{font-family:var(--display);font-weight:600;font-size:15px;padding:10px 16px;border-radius:12px;border:1px solid var(--fg);background:var(--fg);color:var(--bg);min-height:44px}
+.btn.ghost{background:transparent;color:var(--fg)}.btn.quiet{background:var(--surface);color:var(--fg);border-color:var(--line)}
+.btn.tiny{min-height:30px;padding:3px 10px;font-size:13px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+pre{margin:0;white-space:pre-wrap;word-break:break-all;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px}
+.msg{font-size:14px;color:var(--ok);min-height:1.2em}.msg.bad{color:var(--bad)}
+.tablebox{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:14.5px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-family:var(--display);font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--soft)}
+tr:last-child td{border-bottom:0}
+td.rk{font-family:var(--display);font-weight:800}
+.bar{height:8px;border-radius:4px;background:var(--soft);overflow:hidden;min-width:80px}.bar i{display:block;height:100%;background:var(--accent)}
+.chl{display:grid;gap:8px}
+.chi{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;border-bottom:1px solid var(--line);padding-bottom:8px}
+details{display:grid;gap:10px}details summary{cursor:pointer;font-weight:600}
+img.rank{width:100%;max-width:540px;border-radius:14px;border:1px solid var(--line)}
+</style>
+</head>
+<body>
+<main>
+  <header><img class="l" src="icons/logo-dark.png" alt="DynamVic Cycling coach"><img class="d" src="icons/logo-light.png" alt="DynamVic Cycling coach"><div><h1>DynamCore Coach</h1><p class="small muted">Toegang, uitdagingen en ranking. Alles blijft in deze browser.</p></div></header>
+
+  <section class="card" id="acc" hidden>
+    <h2>0 · Toegang (activatie per toestel)</h2>
+    <div id="k-none">
+      <p class="small muted">Eenmalig: maak je sleutelpaar aan. De geheime sleutel blijft enkel in deze browser. De publieke sleutel (key.js) upload je naar GitHub; zonder key.js blijft de app voor iedereen op slot.</p>
+      <div class="row"><button class="btn" id="k-make">Maak sleutels aan</button></div>
+      <details><summary class="small">Ik heb al een back-up van mijn sleutel</summary>
+        <div class="grid2"><label>Back-up<textarea id="k-imp" placeholder="DCK1.…"></textarea></label><label>Wachtwoord<input id="k-imppw" type="password" autocomplete="off"></label></div>
+        <button class="btn quiet" id="k-import">Zet sleutel terug</button></details>
+    </div>
+    <div id="k-have" hidden>
+      <div class="row"><button class="btn ghost" id="k-dl">Download key.js</button><span class="small muted">Upload key.js naar je GitHub-repository, naast index.html. Opnieuw doen na elke intrekking.</span></div>
+      <details><summary class="small">Back-up van je geheime sleutel (sterk aangeraden)</summary>
+        <p class="small muted">Wis je deze browser, dan ben je je sleutel kwijt en moet iedereen opnieuw geactiveerd worden. Bewaar de back-up op een veilige plek (bv. wachtwoordbeheerder) met een sterk wachtwoord.</p>
+        <div class="grid2"><label>Wachtwoord (min. 10 tekens)<input id="k-pw" type="password" autocomplete="new-password"></label></div>
+        <button class="btn quiet" id="k-export">Maak back-up</button><pre id="k-bak" hidden></pre></details>
+      <h2 style="font-size:18px;margin-top:6px">Atleet activeren</h2>
+      <div class="grid2">
+        <label>Naam<input id="a-n" maxlength="40" placeholder="Voornaam"></label>
+        <label>Toestelcode<input id="a-d" placeholder="ABCD-EFGH-JKLM" autocapitalize="characters"></label>
+        <label>Geldig tot en met<input type="date" id="a-e"></label>
+      </div>
+      <button class="btn" id="a-make">Maak activatiecode</button><p class="msg" id="a-msg"></p>
+      <div id="a-out" hidden><pre id="a-text"></pre><div class="row"><button class="btn ghost" id="a-copy">Kopieer bericht</button><span class="msg" id="a-cmsg"></span></div></div>
+      <h2 style="font-size:18px;margin-top:6px">Geactiveerde toestellen</h2>
+      <div class="tablebox"><table><thead><tr><th>Naam</th><th>Toestel</th><th>Tot</th><th>Status</th><th></th></tr></thead><tbody id="a-list"></tbody></table></div>
+      <p class="small muted" id="a-rev"></p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>1 · Nieuwe uitdaging</h2>
+    <div class="grid2">
+      <label>Titel<input id="c-t" placeholder="Decemberuitdaging" maxlength="40"></label>
+      <label>Wat telt?<select id="c-k">
+        <option value="sessions">Aantal sessies (alles wat afgevinkt is)</option>
+        <option value="weeks">Volledige weken (alle geplande sessies gedaan)</option>
+        <option value="minutes">Minuten training</option>
+        <option value="type:CORE">Romp &amp; kracht-sessies</option>
+        <option value="type:LEG">Benen &amp; heupen-sessies</option>
+        <option value="type:MOB">Mobiliteitssessies</option>
+      </select></label>
+      <label>Van<input type="date" id="c-f"></label>
+      <label>Tot en met<input type="date" id="c-to"></label>
+      <label>Doel<input id="c-g" inputmode="numeric" placeholder="12"></label>
+    </div>
+    <button class="btn" id="c-make">Maak uitdaging</button><p class="msg" id="c-msg"></p>
+    <div id="c-out" hidden>
+      <p class="small muted">Kopieer dit bericht naar je WhatsApp-groep. De atleten plakken de code in DynamCore → Vooruitgang → Groepsuitdagingen.</p>
+      <pre id="c-text"></pre>
+      <div class="row"><button class="btn ghost" id="c-copy">Kopieer bericht</button><span class="msg" id="c-cmsg"></span></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>2 · Berichten van de atleten inlezen</h2>
+    <p class="small muted">Plak hier de gedeelde berichten uit WhatsApp (één of meerdere tegelijk, ook een hele chat-export). De app herkent de code die begint met <code>#DC1.</code> en houdt per atleet het nieuwste bericht bij.</p>
+    <textarea id="r-in" placeholder="Plak hier de berichten…"></textarea>
+    <div class="row"><button class="btn" id="r-read">Lees in</button><span class="msg" id="r-msg"></span></div>
+  </section>
+
+  <section class="card">
+    <h2>3 · Ranking</h2>
+    <div class="grid2">
+      <label>Rangschik op<select id="r-sort"></select></label>
+    </div>
+    <div class="tablebox"><table><thead><tr><th>#</th><th>Atleet</th><th id="r-col">Waarde</th><th></th><th>Week</th><th>Reeks</th><th>Totaal</th><th>Laatst</th><th></th></tr></thead><tbody id="r-body"></tbody></table></div>
+    <p class="small muted" id="r-empty">Nog geen gegevens ingelezen.</p>
+    <div class="row"><button class="btn" id="r-img">Maak afbeelding voor de groep</button><button class="btn ghost" id="r-copy">Kopieer als tekst</button><span class="msg" id="r-cmsg"></span></div>
+    <div id="r-imgout" hidden><img class="rank" id="r-image" alt="Ranking"><p class="small muted">Houd de afbeelding ingedrukt (gsm) of klik rechts (computer) om te bewaren en te delen.</p></div>
+  </section>
+
+  <section class="card">
+    <h2>Mijn uitdagingen</h2>
+    <div class="chl" id="ch-list"></div>
+    <div class="row"><button class="btn quiet" id="r-clear">Wis alle ingelezen gegevens</button><span class="msg" id="x-msg"></span></div>
+  </section>
+</main>
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const store = { get(k, d) { try { const v = localStorage.getItem('dcc:' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem('dcc:' + k, JSON.stringify(v)); } catch (e) { } } };
+const b64u = {
+  enc: o => btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''),
+  dec: s => JSON.parse(decodeURIComponent(escape(atob(s.replace(/-/g, '+').replace(/_/g, '/')))))
+};
+/* Shared codes come from WhatsApp messages: never trust them. Keep only known fields, force numbers, cut text. */
+const int0 = x => { const n = Math.floor(Number(x)); return Number.isFinite(n) && n >= 0 ? Math.min(n, 1e6) : 0; };
+function cleanEntry(e) {
+  if (!e || typeof e !== 'object' || typeof e.n !== 'string' || !e.n.trim() || typeof e.d !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(e.d)) return null;
+  return { n: e.n.trim().slice(0, 40), d: e.d, w: int0(e.w), wd: int0(e.wd), wt: int0(e.wt), s: int0(e.s), tot: int0(e.tot), min: int0(e.min),
+    c: (Array.isArray(e.c) ? e.c : []).filter(x => x && typeof x.i === 'string').slice(0, 20).map(x => ({ i: x.i.slice(0, 12), v: int0(x.v), g: int0(x.g) })) };
+}
+let CH = store.get('challenges', []), RE = store.get('entries', {});
+RE = Object.fromEntries(Object.entries(RE || {}).map(([k, e]) => [k, cleanEntry(e)]).filter(([, e]) => e));
+const save = () => { store.set('challenges', CH); store.set('entries', RE); };
+const KIND = { sessions: 'sessies', weeks: 'volledige weken', minutes: 'minuten', 'type:CORE': 'romp-sessies', 'type:LEG': 'benen-sessies', 'type:MOB': 'mobiliteitssessies' };
+const kindOf = c => c.k === 'type' ? 'type:' + c.ty : c.k;
+const fmt = iso => iso ? iso.split('-').reverse().join('-') : '';
+async function copy(text, el) { try { await navigator.clipboard.writeText(text); el.textContent = 'Gekopieerd'; } catch (e) { el.textContent = 'Kopiëren lukt niet: selecteer de tekst handmatig'; } setTimeout(() => el.textContent = '', 3000); }
+
+// defaults: next month
+(() => { const d = new Date(), f = new Date(d.getFullYear(), d.getMonth() + 1, 1), to = new Date(d.getFullYear(), d.getMonth() + 2, 0); const iso = x => `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; $('#c-f').value = iso(f); $('#c-to').value = iso(to); })();
+
+$('#c-make').onclick = () => {
+  const t = $('#c-t').value.trim(), k = $('#c-k').value, f = $('#c-f').value, to = $('#c-to').value, g = parseInt($('#c-g').value, 10), m = $('#c-msg');
+  m.className = 'msg bad';
+  if (!t) return m.textContent = 'Geef de uitdaging een titel.';
+  if (!f || !to || to < f) return m.textContent = 'Kies een geldige periode (tot en met na van).';
+  if (!(g > 0)) return m.textContent = 'Vul een doel in (een getal groter dan 0).';
+  const c = { i: Math.random().toString(36).slice(2, 8), t, k: k.startsWith('type:') ? 'type' : k, f, to, g };
+  if (k.startsWith('type:')) c.ty = k.slice(5);
+  const code = 'DCC1.' + b64u.enc(c);
+  CH.push({ ...c, code }); save();
+  const link = location.href.replace(/coach\.html.*$/, '') + '?c=' + code;
+  $('#c-text').textContent = `🏁 Nieuwe DynamCore-uitdaging: ${t}\nDoel: ${g} ${KIND[k]} van ${fmt(f)} tot en met ${fmt(to)}.\n\nZo doe je mee: open DynamCore → Vooruitgang → Groepsuitdagingen en plak deze code:\n${code}\n\n(Android: je kan ook deze link openen: ${link})\n\nDeel elke week je kaart via "Deel je week in de groep" 💪`;
+  $('#c-out').hidden = false; m.className = 'msg'; m.textContent = 'Uitdaging gemaakt.';
+  renderAll();
+};
+$('#c-copy').onclick = () => copy($('#c-text').textContent, $('#c-cmsg'));
+
+$('#r-read').onclick = () => {
+  const txt = $('#r-in').value, re = /#?DC1\.([A-Za-z0-9_-]+)/g; let m, n = 0, bad = 0;
+  while ((m = re.exec(txt))) {
+    try { const e = cleanEntry(b64u.dec(m[1])); if (!e) { bad++; continue; } const key = e.n.trim().toLowerCase(); if (!RE[key] || RE[key].d <= e.d) RE[key] = e; n++; } catch (x) { bad++; }
+  }
+  save(); renderAll();
+  const el = $('#r-msg'); el.className = n ? 'msg' : 'msg bad';
+  el.textContent = n ? `${n} bericht(en) ingelezen${bad ? `, ${bad} onleesbaar` : ''}.` : 'Geen DynamCore-code gevonden in de geplakte tekst.';
+  if (n) $('#r-in').value = '';
+};
+
+function metricOptions() {
+  const o = CH.map(c => [`ch:${c.i}`, `Uitdaging: ${c.t}`]);
+  return [...o, ['tot', 'Totaal aantal sessies'], ['s', 'Volledige weken op rij'], ['min', 'Minuten training']];
+}
+function value(e, metric) {
+  if (metric.startsWith('ch:')) { const id = metric.slice(3), c = (e.c || []).find(x => x.i === id); return c ? { v: c.v, g: c.g } : { v: 0, g: (CH.find(x => x.i === id) || {}).g || 0 }; }
+  return { v: e[metric] || 0, g: null };
+}
+function ranked() {
+  const metric = $('#r-sort').value || 'tot';
+  return { metric, rows: Object.values(RE).map(e => ({ e, ...value(e, metric) })).sort((a, b) => b.v - a.v || (b.e.tot || 0) - (a.e.tot || 0)) };
+}
+function renderAll() {
+  const sel = $('#r-sort'), cur = sel.value; sel.innerHTML = metricOptions().map(([v, l]) => `<option value="${esc(v)}">${esc(l)}</option>`).join('');
+  if ([...sel.options].some(o => o.value === cur)) sel.value = cur;
+  const { metric, rows } = ranked();
+  $('#r-col').textContent = metric.startsWith('ch:') ? 'Uitdaging' : sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : 'Waarde';
+  $('#r-body').innerHTML = rows.map((r, i) => `<tr><td class="rk">${i + 1}</td><td>${esc(r.e.n)}</td><td>${int0(r.v)}${r.g ? ` / ${int0(r.g)}` : ''}</td><td>${r.g ? `<div class="bar"><i style="width:${Math.min(100, int0(r.v) / int0(r.g) * 100) || 0}%"></i></div>` : ''}</td><td>wk ${int0(r.e.w)}: ${int0(r.e.wd)}/${int0(r.e.wt)}</td><td>${int0(r.e.s)}</td><td>${int0(r.e.tot)}</td><td>${esc(fmt(r.e.d))}</td><td><button class="btn tiny quiet" data-rm="${esc(r.e.n.trim().toLowerCase())}">Verwijder</button></td></tr>`).join('');
+  $('#r-empty').hidden = rows.length > 0;
+  $('#ch-list').innerHTML = CH.length ? CH.map(c => `<div class="chi"><div><b>${esc(c.t)}</b><div class="small muted">${int0(c.g)} ${esc(KIND[kindOf(c)] || '')} · ${esc(fmt(c.f))} – ${esc(fmt(c.to))}</div></div><div class="row"><button class="btn tiny ghost" data-cp="${esc(c.i)}">Kopieer code</button><button class="btn tiny quiet" data-del="${esc(c.i)}">Verwijder</button></div></div>`).join('') : '<p class="small muted">Nog geen uitdagingen gemaakt.</p>';
+}
+$('#r-sort').onchange = renderAll;
+document.addEventListener('click', e => {
+  const rm = e.target.closest('[data-rm]'); if (rm) { delete RE[rm.dataset.rm]; save(); renderAll(); }
+  const del = e.target.closest('[data-del]'); if (del) { CH = CH.filter(c => c.i !== del.dataset.del); save(); renderAll(); }
+  const cp = e.target.closest('[data-cp]'); if (cp) { const c = CH.find(x => x.i === cp.dataset.cp); if (c) copy(c.code, $('#x-msg')); }
+});
+let clearArmed = false;
+$('#r-clear').onclick = () => {
+  if (!clearArmed) { clearArmed = true; $('#r-clear').textContent = 'Tik nogmaals om te wissen'; setTimeout(() => { clearArmed = false; $('#r-clear').textContent = 'Wis alle ingelezen gegevens'; }, 4000); return; }
+  RE = {}; save(); clearArmed = false; $('#r-clear').textContent = 'Wis alle ingelezen gegevens'; renderAll();
+};
+$('#r-copy').onclick = () => {
+  const { metric, rows } = ranked(), sel = $('#r-sort'), title = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : '';
+  const medal = i => ['🥇', '🥈', '🥉'][i] || `${i + 1}.`;
+  copy(`🏆 DynamCore-ranking · ${title}\n` + rows.map((r, i) => `${medal(i)} ${r.e.n} – ${r.v}${r.g ? ` / ${r.g}` : ''}`).join('\n'), $('#r-cmsg'));
+};
+$('#r-img').onclick = async () => {
+  const { rows } = ranked(), sel = $('#r-sort'), title = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : '';
+  try { await document.fonts.ready; } catch (e) { }
+  const n = Math.min(rows.length, 12), W = 1080, H = 380 + n * 110 + 120, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const x = cv.getContext('2d'), disp = '"Poppins","Segoe UI",sans-serif', body = '"Inter","Segoe UI",sans-serif';
+  x.fillStyle = '#F5F5F3'; x.fillRect(0, 0, W, H); x.fillStyle = '#fff'; x.beginPath(); x.roundRect ? x.roundRect(40, 40, W - 80, H - 80, 40) : x.rect(40, 40, W - 80, H - 80); x.fill();
+  const logo = await new Promise(r => { const i = new Image(); i.onload = () => r(i); i.onerror = () => r(null); i.src = 'icons/logo-dark.png'; });
+  if (logo) x.drawImage(logo, 90, 80, 360, 360 * logo.height / logo.width);
+  x.fillStyle = '#111214'; x.font = `800 64px ${disp}`; x.fillText('Ranking', 90, 270);
+  x.fillStyle = '#2448C8'; x.font = `600 34px ${body}`; x.fillText(title.slice(0, 48), 90, 320);
+  rows.slice(0, n).forEach((r, i) => {
+    const y = 400 + i * 110;
+    x.fillStyle = i < 3 ? '#2448C8' : '#5D616B'; x.font = `800 52px ${disp}`; x.fillText(String(i + 1), 90, y + 50);
+    x.fillStyle = '#111214'; x.font = `700 42px ${disp}`; x.fillText(r.e.n.slice(0, 22), 180, y + 46);
+    const val = `${r.v}${r.g ? ' / ' + r.g : ''}`; x.font = `800 44px ${disp}`; x.fillText(val, W - 90 - x.measureText(val).width, y + 46);
+    if (r.g) { x.fillStyle = '#EEEFF1'; x.fillRect(180, y + 66, W - 270, 14); x.fillStyle = '#2448C8'; x.fillRect(180, y + 66, (W - 270) * Math.min(1, r.v / r.g), 14); }
+  });
+  x.fillStyle = '#5D616B'; x.font = `500 26px ${body}`; x.fillText('DynamCore · DynamVic Cycling coach', 90, H - 80);
+  $('#r-image').src = cv.toDataURL('image/png'); $('#r-imgout').hidden = false;
+};
+renderAll();
+
+/* ---------- 0 · access keys and activation ---------- */
+const bx = { enc: buf => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''),
+  dec: s => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), ch => ch.charCodeAt(0)) };
+let KP = store.get('keys', null), ACTS = store.get('acts', []), REV = store.get('revoked', []);
+const saveAcc = () => { store.set('keys', KP); store.set('acts', ACTS); store.set('revoked', REV); };
+const todayIso = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+(() => { const d = new Date(); $('#a-e').value = `${d.getFullYear() + 1}-12-31`; })();
+function accRender() {
+  $('#k-none').hidden = !!KP; $('#k-have').hidden = !KP;
+  const td = todayIso();
+  $('#a-list').innerHTML = ACTS.map((a, i) => { const rev = REV.includes(a.d), exp = a.e && a.e < td;
+    return `<tr><td>${esc(a.n)}</td><td><code>${esc(a.d)}</code></td><td>${esc(fmt(a.e)) || '–'}</td><td>${rev ? 'Ingetrokken' : exp ? 'Verlopen' : 'Actief'}</td><td>${rev ? `<button class="btn tiny quiet" data-unrev="${esc(a.d)}">Herstel</button>` : `<button class="btn tiny quiet" data-rev="${esc(a.d)}">Intrekken</button>`}</td></tr>`; }).join('') || '<tr><td colspan="5" class="muted">Nog geen activaties.</td></tr>';
+  $('#a-rev').textContent = REV.length ? `Ingetrokken: ${REV.length}. Download key.js opnieuw en upload hem naar GitHub; de intrekking werkt zodra de atleet de app opent met internet.` : '';
+}
+$('#k-make').onclick = async () => {
+  const k = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']);
+  const priv = await crypto.subtle.exportKey('jwk', k.privateKey), pub = await crypto.subtle.exportKey('jwk', k.publicKey);
+  KP = { priv, pub: { kty: pub.kty, crv: pub.crv, x: pub.x, y: pub.y }, made: todayIso() }; saveAcc(); accRender();
+};
+function keyJs() {
+  return `/* DynamCore – publieke sleutel van de coach (mag openbaar staan). Gemaakt op coach.html op ${KP.made}.\n   DC_REVOKED: toestelcodes waarvan de toegang is ingetrokken. */\nconst DC_KEY = ${JSON.stringify(KP.pub)};\nconst DC_REVOKED = ${JSON.stringify(REV)};\n`;
+}
+$('#k-dl').onclick = () => { const u = URL.createObjectURL(new Blob([keyJs()], { type: 'text/javascript' })); const a = document.createElement('a'); a.href = u; a.download = 'key.js'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 3000); };
+async function pwKey(pw, salt) {
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: 250000, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+}
+$('#k-export').onclick = async () => {
+  const pw = $('#k-pw').value; if (pw.length < 10) { alertMsg('#k-bak', 'Kies een wachtwoord van minstens 10 tekens.'); return; }
+  const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, await pwKey(pw, salt), new TextEncoder().encode(JSON.stringify({ KP, ACTS, REV })));
+  alertMsg('#k-bak', 'DCK1.' + bx.enc(new TextEncoder().encode(JSON.stringify({ s: bx.enc(salt), iv: bx.enc(iv), c: bx.enc(ct) }))));
+};
+function alertMsg(sel, txt) { const el = $(sel); el.hidden = false; el.textContent = txt; }
+$('#k-import').onclick = async () => {
+  try {
+    const raw = $('#k-imp').value.trim().replace(/^DCK1\./, ''), o = JSON.parse(new TextDecoder().decode(bx.dec(raw)));
+    const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: bx.dec(o.iv) }, await pwKey($('#k-imppw').value, bx.dec(o.s)), bx.dec(o.c));
+    const d = JSON.parse(new TextDecoder().decode(pt)); KP = d.KP; ACTS = d.ACTS || []; REV = d.REV || []; saveAcc(); accRender();
+  } catch (e) { $('#k-imp').value = ''; $('#k-imp').placeholder = 'Back-up of wachtwoord klopt niet.'; }
+};
+$('#a-make').onclick = async () => {
+  const m = $('#a-msg'); m.className = 'msg bad';
+  const n = $('#a-n').value.trim(), d = $('#a-d').value.trim().toUpperCase().replace(/[^A-Z0-9]/g, ''), e = $('#a-e').value;
+  if (!n) return m.textContent = 'Vul de naam in.';
+  if (d.length !== 12) return m.textContent = 'De toestelcode heeft 12 tekens (bv. ABCD-EFGH-JKLM).';
+  const dev = `${d.slice(0, 4)}-${d.slice(4, 8)}-${d.slice(8)}`;
+  const pay = bx.enc(new TextEncoder().encode(JSON.stringify({ d: dev, n, e: e || null, i: todayIso() })));
+  const key = await crypto.subtle.importKey('jwk', KP.priv, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']);
+  const sig = await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, key, new TextEncoder().encode(pay));
+  const code = `DCA1.${pay}.${bx.enc(sig)}`;
+  ACTS = ACTS.filter(a => a.d !== dev); ACTS.push({ n, d: dev, e: e || null, i: todayIso() }); REV = REV.filter(x => x !== dev); saveAcc(); accRender();
+  $('#a-text').textContent = `Hoi ${n}, hier is je activatiecode voor DynamCore. Open de app, plak de code bij stap 2 en tik op Activeer. Ze werkt enkel op jouw toestel.\n\n${code}`;
+  $('#a-out').hidden = false; m.className = 'msg'; m.textContent = `Activatiecode gemaakt voor ${n}${e ? ', geldig tot ' + fmt(e) : ''}.`;
+};
+$('#a-copy').onclick = () => copy($('#a-text').textContent, $('#a-cmsg'));
+document.addEventListener('click', e => {
+  const r = e.target.closest('[data-rev]'); if (r) { if (!REV.includes(r.dataset.rev)) REV.push(r.dataset.rev); saveAcc(); accRender(); }
+  const u = e.target.closest('[data-unrev]'); if (u) { REV = REV.filter(x => x !== u.dataset.unrev); saveAcc(); accRender(); }
+});
+const ACCESS_ENABLED = false; /* lock parked: set to true to show section 0 */
+$('#acc').hidden = !ACCESS_ENABLED;
+accRender();
+</script>
+</body>
+</html>
