@@ -23,28 +23,30 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-
 main{max-width:860px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 60px;display:grid;gap:16px}
 main>*{min-width:0}
 h1,h2,h3{font-family:var(--display);margin:0;line-height:1.1;text-wrap:balance}
-h1{font-size:28px;font-weight:800}h2{font-size:20px;font-weight:700}
+h1{font-size:30px;font-weight:800}h2{font-size:20px;font-weight:700}
 p{margin:0}.muted{color:var(--muted)}.small{font-size:13.5px}
 header{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 header img{height:40px;width:auto}
 @media (prefers-color-scheme:dark){header img.l{display:none}}@media (prefers-color-scheme:light){header img.d{display:none}}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;display:grid;gap:12px;min-width:0}
 .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
-label{display:grid;gap:4px;font-size:14px;font-weight:600}
+label{display:grid;gap:4px;font-size:15px;font-weight:600}
 input,select,textarea{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px;width:100%;font-weight:400}
-textarea{min-height:110px;font-family:ui-monospace,Menlo,monospace;font-size:12.5px}
+textarea{min-height:110px;font-family:ui-monospace,Menlo,monospace;font-size:13.5px}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 button{font:inherit;cursor:pointer}
-.btn{font-family:var(--display);font-weight:600;font-size:15px;padding:10px 16px;border-radius:12px;border:1px solid var(--fg);background:var(--fg);color:var(--bg);min-height:44px}
-.btn.ghost{background:transparent;color:var(--fg)}.btn.quiet{background:var(--surface);color:var(--fg);border-color:var(--line)}
-.btn.tiny{min-height:30px;padding:3px 10px;font-size:13px}
+/* v2.3: same buttons as the app – one main action (.primary, accent) per section, the rest secondary */
+.btn{font-family:var(--display);font-weight:600;font-size:15px;padding:10px 16px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--fg);min-height:44px}
+.btn.ghost{background:transparent}.btn.quiet{background:var(--surface)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.tiny{min-height:44px;padding:4px 12px;font-size:15px}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-pre{margin:0;white-space:pre-wrap;word-break:break-all;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px}
-.msg{font-size:14px;color:var(--ok);min-height:1.2em}.msg.bad{color:var(--bad)}
+pre{margin:0;white-space:pre-wrap;word-break:break-all;font-family:ui-monospace,Menlo,monospace;font-size:13.5px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px}
+.msg{font-size:15px;color:var(--ok);min-height:1.2em}.msg.bad{color:var(--bad)}
 .tablebox{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
-table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:14.5px}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:15px}
 th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
-th{font-family:var(--display);font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--soft)}
+th{font-family:var(--display);font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--soft)}
 tr:last-child td{border-bottom:0}
 td.rk{font-family:var(--display);font-weight:800}
 .bar{height:8px;border-radius:4px;background:var(--soft);overflow:hidden;min-width:80px}.bar i{display:block;height:100%;background:var(--accent)}
@@ -73,7 +75,7 @@ img.rank{width:100%;max-width:540px;border-radius:14px;border:1px solid var(--li
         <p class="small muted">Wis je deze browser, dan ben je je sleutel kwijt en moet iedereen opnieuw geactiveerd worden. Bewaar de back-up op een veilige plek (bv. wachtwoordbeheerder) met een sterk wachtwoord.</p>
         <div class="grid2"><label>Wachtwoord (min. 10 tekens)<input id="k-pw" type="password" autocomplete="new-password"></label></div>
         <button class="btn quiet" id="k-export">Maak back-up</button><pre id="k-bak" hidden></pre></details>
-      <h2 style="font-size:18px;margin-top:6px">Atleet activeren</h2>
+      <h2 style="font-size:20px;margin-top:6px">Atleet activeren</h2>
       <div class="grid2">
         <label>Naam<input id="a-n" maxlength="40" placeholder="Voornaam"></label>
         <label>Toestelcode<input id="a-d" placeholder="ABCD-EFGH-JKLM" autocapitalize="characters"></label>
@@ -81,7 +83,7 @@ img.rank{width:100%;max-width:540px;border-radius:14px;border:1px solid var(--li
       </div>
       <button class="btn" id="a-make">Maak activatiecode</button><p class="msg" id="a-msg"></p>
       <div id="a-out" hidden><pre id="a-text"></pre><div class="row"><button class="btn ghost" id="a-copy">Kopieer bericht</button><span class="msg" id="a-cmsg"></span></div></div>
-      <h2 style="font-size:18px;margin-top:6px">Geactiveerde toestellen</h2>
+      <h2 style="font-size:20px;margin-top:6px">Geactiveerde toestellen</h2>
       <div class="tablebox"><table><thead><tr><th>Naam</th><th>Toestel</th><th>Tot</th><th>Status</th><th></th></tr></thead><tbody id="a-list"></tbody></table></div>
       <p class="small muted" id="a-rev"></p>
     </div>
@@ -103,7 +105,7 @@ img.rank{width:100%;max-width:540px;border-radius:14px;border:1px solid var(--li
       <label>Tot en met<input type="date" id="c-to"></label>
       <label>Doel<input id="c-g" inputmode="numeric" placeholder="12"></label>
     </div>
-    <button class="btn" id="c-make">Maak uitdaging</button><p class="msg" id="c-msg"></p>
+    <button class="btn primary" id="c-make">Maak uitdaging</button><p class="msg" id="c-msg"></p>
     <div id="c-out" hidden>
       <p class="small muted">Kopieer dit bericht naar je WhatsApp-groep. De atleten plakken de code in DynamCore → Vooruitgang → Groepsuitdagingen.</p>
       <pre id="c-text"></pre>
@@ -115,7 +117,7 @@ img.rank{width:100%;max-width:540px;border-radius:14px;border:1px solid var(--li
     <h2>2 · Berichten van de atleten inlezen</h2>
     <p class="small muted">Plak hier de gedeelde berichten uit WhatsApp (één of meerdere tegelijk, ook een hele chat-export). De app herkent de code die begint met <code>#DC1.</code> en houdt per atleet het nieuwste bericht bij.</p>
     <textarea id="r-in" placeholder="Plak hier de berichten…"></textarea>
-    <div class="row"><button class="btn" id="r-read">Lees in</button><span class="msg" id="r-msg"></span></div>
+    <div class="row"><button class="btn primary" id="r-read">Lees in</button><span class="msg" id="r-msg"></span></div>
   </section>
 
   <section class="card">
@@ -125,7 +127,7 @@ img.rank{width:100%;max-width:540px;border-radius:14px;border:1px solid var(--li
     </div>
     <div class="tablebox"><table><thead><tr><th>#</th><th>Atleet</th><th id="r-col">Waarde</th><th></th><th>Week</th><th>Reeks</th><th>Totaal</th><th>Laatst</th><th></th></tr></thead><tbody id="r-body"></tbody></table></div>
     <p class="small muted" id="r-empty">Nog geen gegevens ingelezen.</p>
-    <div class="row"><button class="btn" id="r-img">Maak afbeelding voor de groep</button><button class="btn ghost" id="r-copy">Kopieer als tekst</button><span class="msg" id="r-cmsg"></span></div>
+    <div class="row"><button class="btn primary" id="r-img">Maak afbeelding voor de groep</button><button class="btn ghost" id="r-copy">Kopieer als tekst</button><span class="msg" id="r-cmsg"></span></div>
     <div id="r-imgout" hidden><img class="rank" id="r-image" alt="Ranking"><p class="small muted">Houd de afbeelding ingedrukt (gsm) of klik rechts (computer) om te bewaren en te delen.</p></div>
   </section>
 
@@ -155,6 +157,9 @@ let CH = store.get('challenges', []), RE = store.get('entries', {});
 RE = Object.fromEntries(Object.entries(RE || {}).map(([k, e]) => [k, cleanEntry(e)]).filter(([, e]) => e));
 const save = () => { store.set('challenges', CH); store.set('entries', RE); };
 const KIND = { sessions: 'sessies', weeks: 'volledige weken', minutes: 'minuten', 'type:CORE': 'romp-sessies', 'type:LEG': 'benen-sessies', 'type:MOB': 'mobiliteitssessies' };
+// v2.3: singular when the goal is 1 ("1 volledige week")
+const KIND1 = { sessions: 'sessie', weeks: 'volledige week', minutes: 'minuut', 'type:CORE': 'romp-sessie', 'type:LEG': 'benen-sessie', 'type:MOB': 'mobiliteitssessie' };
+const kindTxt = (k, n) => (+n === 1 ? KIND1[k] : KIND[k]) || '';
 const kindOf = c => c.k === 'type' ? 'type:' + c.ty : c.k;
 const fmt = iso => iso ? iso.split('-').reverse().join('-') : '';
 async function copy(text, el) { try { await navigator.clipboard.writeText(text); el.textContent = 'Gekopieerd'; } catch (e) { el.textContent = 'Kopiëren lukt niet: selecteer de tekst handmatig'; } setTimeout(() => el.textContent = '', 3000); }
@@ -173,7 +178,7 @@ $('#c-make').onclick = () => {
   const code = 'DCC1.' + b64u.enc(c);
   CH.push({ ...c, code }); save();
   const link = location.href.replace(/coach\.html.*$/, '') + '?c=' + code;
-  $('#c-text').textContent = `🏁 Nieuwe DynamCore-uitdaging: ${t}\nDoel: ${g} ${KIND[k]} van ${fmt(f)} tot en met ${fmt(to)}.\n\nZo doe je mee: open DynamCore → Vooruitgang → Groepsuitdagingen en plak deze code:\n${code}\n\n(Android: je kan ook deze link openen: ${link})\n\nDeel elke week je kaart via "Deel je week in de groep" 💪`;
+  $('#c-text').textContent = `🏁 Nieuwe DynamCore-uitdaging: ${t}\nDoel: ${g} ${kindTxt(k, g)} van ${fmt(f)} tot en met ${fmt(to)}.\n\nZo doe je mee: open DynamCore → Vooruitgang → Groepsuitdagingen en plak deze code:\n${code}\n\n(Android: je kan ook deze link openen: ${link})\n\nDeel elke week je kaart via "Deel je week in de groep" 💪`;
   $('#c-out').hidden = false; m.className = 'msg'; m.textContent = 'Uitdaging gemaakt.';
   renderAll();
 };
@@ -209,7 +214,7 @@ function renderAll() {
   $('#r-col').textContent = metric.startsWith('ch:') ? 'Uitdaging' : sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : 'Waarde';
   $('#r-body').innerHTML = rows.map((r, i) => `<tr><td class="rk">${i + 1}</td><td>${esc(r.e.n)}</td><td>${int0(r.v)}${r.g ? ` / ${int0(r.g)}` : ''}</td><td>${r.g ? `<div class="bar"><i style="width:${Math.min(100, int0(r.v) / int0(r.g) * 100) || 0}%"></i></div>` : ''}</td><td>wk ${int0(r.e.w)}: ${int0(r.e.wd)}/${int0(r.e.wt)}</td><td>${int0(r.e.s)}</td><td>${int0(r.e.tot)}</td><td>${esc(fmt(r.e.d))}</td><td><button class="btn tiny quiet" data-rm="${esc(r.e.n.trim().toLowerCase())}">Verwijder</button></td></tr>`).join('');
   $('#r-empty').hidden = rows.length > 0;
-  $('#ch-list').innerHTML = CH.length ? CH.map(c => `<div class="chi"><div><b>${esc(c.t)}</b><div class="small muted">${int0(c.g)} ${esc(KIND[kindOf(c)] || '')} · ${esc(fmt(c.f))} – ${esc(fmt(c.to))}</div></div><div class="row"><button class="btn tiny ghost" data-cp="${esc(c.i)}">Kopieer code</button><button class="btn tiny quiet" data-del="${esc(c.i)}">Verwijder</button></div></div>`).join('') : '<p class="small muted">Nog geen uitdagingen gemaakt.</p>';
+  $('#ch-list').innerHTML = CH.length ? CH.map(c => `<div class="chi"><div><b>${esc(c.t)}</b><div class="small muted">${int0(c.g)} ${esc(kindTxt(kindOf(c), c.g))} · ${esc(fmt(c.f))} – ${esc(fmt(c.to))}</div></div><div class="row"><button class="btn tiny ghost" data-cp="${esc(c.i)}">Kopieer code</button><button class="btn tiny quiet" data-del="${esc(c.i)}">Verwijder</button></div></div>`).join('') : '<p class="small muted">Nog geen uitdagingen gemaakt.</p>';
 }
 $('#r-sort').onchange = renderAll;
 document.addEventListener('click', e => {

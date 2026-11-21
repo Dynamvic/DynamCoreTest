@@ -24,7 +24,7 @@ function openDone(ctx) {
   UI.doneCtx = { ...ctx, rpe };
   const hasKey = !!(P.icuKey && String(P.icuKey).trim());
   const linked = log && log.icu ? `<p class="small muted">${t('dn_linked', { d: DN.fmt(log.icu.at) })}${log.icu.mode === 'watch' ? ' ' + t('dn_linked_watch') : ''}</p>` : '';
-  sheet(`${ctx.finished ? `<p class="eyebrow ok">✓ ${t('g_finished')}</p>` : ''}<h3>${log ? t('dn_edit') : t('dn_title')} · ${esc(typeLabel(ctx.type))}</h3>
+  sheet(`${ctx.finished ? `<p class="eyebrow ok">${IC.check} ${t('g_finished')}</p>` : ''}<h3>${log ? t('dn_edit') : t('dn_title')} · ${esc(typeLabel(ctx.type))}</h3>
     <div class="dn">
       <div class="fld"><span class="lbl" id="dn-dl">${t('dn_date')}</span><div class="dnd"><b id="dn-dtxt">${DN.fmtY(day)}</b>
         <label class="dnchg">${t('dn_change')}<input type="date" id="dn-date" value="${DN.iso(day)}" max="${DN.iso(td)}" aria-labelledby="dn-dl"></label></div></div>
@@ -46,6 +46,7 @@ async function saveDone(send) {
   const dur = Math.max(1, Math.min(300, parseInt($('#dn-dur').value, 10) || c.est || 30));
   const note = $('#dn-note').value.trim();
   let log = c.isNew ? null : findLog(c.w, c.key), msg = '';
+  const wasNew = !log;   // v2.3: first save of this session (not an edit) -> done feedback below
   if (!log) {
     log = { w: String(c.key).startsWith('R-') ? planWeekOf(P, d) : c.w, key: c.key, type: c.type, d, rpe: c.rpe, est: c.est, dur, note, prevAdj: (P.adj || {})[c.type] || 0 };
     const snap = sessionSnapshot(c); if (snap) log.ses = snap;   // v2.1: keep what was actually done
@@ -71,6 +72,16 @@ async function saveDone(send) {
   UI.doneCtx.isNew = false; UI.doneCtx.w = log.w; UI.doneCtx.key = log.key;
   // v2.0: close the sheet after saving; the result (and the Intervals.icu result) is shown at the bottom of the screen
   closeSheet(); rerenderBehindSheet();
+  // v2.3: feedback for a newly done plan session: the check mark pops once and the message counts the week
+  if (wasNew && !String(log.key).startsWith('R-')) {
+    try {
+      const plan = weekPlan(P, S, log.w), live = plan.slots.filter(s => !s.skipped);
+      const a = live.filter(s => isDone(log.w, s.key)).length;
+      if (a && live.length) msg = t('done_prog', { a, b: live.length }) + (msg ? ' ' + msg : '');
+      const st = document.querySelector(`.slot [data-k="${log.key}"] .st.ok`);
+      if (st) st.classList.add('pop');   // the pop animation is off with reduced motion (CSS)
+    } catch (e) { /* feedback only; never block saving */ }
+  }
   const pre = (msg || t('saved')) + ' ';
   if (send || (log.icu && P.icuKey)) {
     toast(pre + t('dn_sending'));
@@ -142,7 +153,7 @@ async function icuUndo(log) {
 function doneBlock(w, key, type) {
   const log = findLog(w, key); if (!log) return '';
   const hasKey = !!(P.icuKey && String(P.icuKey).trim());
-  return `<section class="card donebox"><div class="row between"><b>✓ ${t('status_done')} · ${DN.fmt(log.d)}</b><span class="pill">RPE ${log.rpe ?? '–'}</span></div>
+  return `<section class="card donebox"><div class="row between"><b>${IC.check} ${t('status_done')} · ${DN.fmt(log.d)}</b><span class="pill">RPE ${log.rpe ?? '–'}</span></div>
     <p class="small muted">${t('dn_dur_s')}: ${log.dur || log.est || '–'} ${t('min')}${log.icu ? ' · ' + t('dn_linked', { d: DN.fmt(log.icu.at) }) : ''}</p>
     ${log.note ? `<p class="note-view">${esc(log.note)}</p>` : ''}
     <div class="row"><button class="btn quiet" data-act="dnedit" data-w="${w}" data-k="${esc(key)}" data-t="${type}">${t('dn_edit_btn')}</button>

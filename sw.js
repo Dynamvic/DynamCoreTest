@@ -1,7 +1,7 @@
 /* DynamCore service worker: works offline.
    After changing any file: raise VERSION so phones fetch the new version. */
-const VERSION = 'dynamcore-v15';
-const CORE = ['./', 'index.html', 'app.js', 'done.js', 'engine.js', 'anim.js', 'group.js', 'access.js', 'coach.html', 'exercises.js', 'i18n.js', 'manifest.webmanifest',
+const VERSION = 'dynamcore-v16';
+const CORE = ['./', 'index.html', 'app.js', 'done.js', 'engine.js', 'anim.js', 'group.js', 'access.js', 'key.js', 'coach.html', 'exercises.js', 'i18n.js', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'icons/logo-dark.png', 'icons/logo-light.png',
   'fonts/poppins-600.woff', 'fonts/poppins-700.woff', 'fonts/poppins-800.woff', 'fonts/inter-400.woff', 'fonts/inter-500.woff', 'fonts/inter-600.woff'];
 

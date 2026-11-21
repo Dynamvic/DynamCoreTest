@@ -1,7 +1,7 @@
 'use strict';
 /* DynamCore – user interface. Data: exercises.js, engine.js, i18n.js. Everything is stored on this phone only. */
 
-const VERSION = '2.2.0';
+const VERSION = '2.3.0';
 const $ = (s, r = document) => r.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const clone = o => JSON.parse(JSON.stringify(o));
@@ -76,6 +76,8 @@ function t(k, v) {
   if (v && typeof s === 'string') for (const x in v) s = s.split(`{${x}}`).join(v[x]);
   return s;
 }
+/* v2.3: singular form when the count is 1 (key + '_1' in i18n.js, e.g. "1 volledige week" instead of "1 volledige weken") */
+function tn(k, n, v) { const one = +n === 1 && ((I18N[lang()] && I18N[lang()][k + '_1']) ?? I18N.nl[k + '_1']) !== undefined; return t(one ? k + '_1' : k, { n, ...(v || {}) }); }
 const exName = id => EXMAP[id] ? EXMAP[id].n[lang()] : id;
 function fmtDose(d) {
   const side = d.side ? t('per_side') : '';
@@ -104,7 +106,8 @@ const IC = {
   x: '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>',
   sound: '<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/></svg>',
   mute: '<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>',
-  watch: '⏱',
+  watch: '<svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9.5 2.5h5M19 6l-1.5 1.5"/></svg>',   // v2.3: SVG instead of the ⏱ glyph
+  stop: '<svg viewBox="0 0 24 24"><rect x="6.5" y="6.5" width="11" height="11" rx="2" fill="currentColor"/></svg>',
   more: '<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="19" cy="12" r="1.6" fill="currentColor"/></svg>'
 };
 const EQIC = {
@@ -216,7 +219,7 @@ function vWizard() {
   return `<div class="wz"><div class="wzhead"><span class="eyebrow">${t('wz_step', { a: step + 1, b: WZ_STEPS.length })}</span><div class="wzbar"><i style="width:${(step + 1) / WZ_STEPS.length * 100}%"></i></div></div>
     <h1 class="h1">${t(st.title)}</h1>${body}
     <div class="wznav">${hint}<div class="wzbtns">${step ? `<button class="btn quiet" data-act="wzback">${t('back')}</button>` : '<span></span>'}
-    <button class="btn" data-act="${st.summary ? 'wzfinish' : 'wznext'}" ${canNext ? '' : 'disabled'}>${st.summary ? t('wz_go') : t('next')}</button></div></div></div>`;
+    <button class="btn primary" data-act="${st.summary ? 'wzfinish' : 'wznext'}" ${canNext ? '' : 'disabled'}>${st.summary ? t('wz_go') : t('next')}</button></div></div></div>`;
 }
 function summaryCard(d) {
   const lv = d.level || (UI.wz && UI.wz.testMode === 'now' ? levelFromTest(UI.wz.test) : 1) || 1;
@@ -241,7 +244,7 @@ const TFIELDS = [
 ];
 function testForm(vals) {
   return `<p class="small muted">${t('test_hint')}</p><div class="tform">${TFIELDS.map(f => {
-    const inp = (key, lab) => `<div class="tin">${lab ? `<span>${lab}</span>` : ''}<input id="t-${key}" data-tk="${key}" inputmode="${f.unit === 'cm' ? 'text' : 'numeric'}" value="${vals[key] ?? ''}" aria-label="${t(f.k.toLowerCase())} ${lab || ''}"><span>${f.unit === 'reps' ? t('reps') : f.unit}</span>${f.sw ? `<button type="button" class="swb${UI.sw && UI.sw.f === key ? ' on' : ''}" data-act="sw" data-f="${key}" aria-label="${t('sw_label')}">${UI.sw && UI.sw.f === key ? '■' : IC.watch}</button>` : ''}</div>`;
+    const inp = (key, lab) => `<div class="tin">${lab ? `<span>${lab}</span>` : ''}<input id="t-${key}" data-tk="${key}" inputmode="${f.unit === 'cm' ? 'text' : 'numeric'}" value="${vals[key] ?? ''}" aria-label="${t(f.k.toLowerCase())} ${lab || ''}"><span>${f.unit === 'reps' ? t('reps') : f.unit}</span>${f.sw ? `<button type="button" class="swb${UI.sw && UI.sw.f === key ? ' on' : ''}" data-act="sw" data-f="${key}" aria-label="${t('sw_label')}">${UI.sw && UI.sw.f === key ? IC.stop : IC.watch}</button>` : ''}</div>`;
     return `<div class="tf"><b>${f.k} · ${t(f.k.toLowerCase())}</b><small class="muted">${t(f.k.toLowerCase() + 's')}</small><div class="tins">${f.lr ? inp(f.k + 'L', t('left')) + inp(f.k + 'R', t('right')) : inp(f.k, '')}</div></div>`;
   }).join('')}</div>`;
 }
@@ -255,7 +258,7 @@ function vWeek() {
   if (UI.viewWeek == null) UI.viewWeek = Math.max(1, cw);
   const w = UI.viewWeek, plan = weekPlan(P, S, w);
   let top = topbar(P.name ? `${P.name}` : 'DynamCore');
-  if (P.paused) return top + `<div class="card"><p>${t('paused', { d: DN.fmtY(P.paused) })}</p><button class="btn" data-act="resume">${t('resume')}</button></div>`;
+  if (P.paused) return top + `<div class="card"><p>${t('paused', { d: DN.fmtY(P.paused) })}</p><button class="btn primary" data-act="resume">${t('resume')}</button></div>`;
   const tv = !!plan.travel;
   const pills = `<span class="pill ph-${plan.phase}">${t('phase_' + plan.phase)}</span>${plan.rec ? `<span class="pill rec">${plan.phase === 'race' ? t('rec_race') : t('recovery_week')}</span>` : ''}${tv ? `<span class="pill rec">${t('travel_mode')}</span>` : ''}`;
   let html = top + `<section class="weekhead">
@@ -265,7 +268,7 @@ function vWeek() {
   if (w === cw) html += todayCard(plan);
   html += accExpiryWarning() + backupReminder();
   if (cw < 1 && w === 1) html += `<div class="card"><p>${t('not_started', { d: DN.fmtY(startNum(P)) })}</p></div>`;
-  if (S.suggest && S.suggest !== P.level) html += `<div class="card ok"><p>${t('suggest_level', { l: S.suggest, name: t('lvl_' + S.suggest) })}</p><div class="row"><button class="btn" data-act="acceptlvl">${t('accept')}</button><button class="btn quiet" data-act="declinelvl">${t('decline')}</button></div></div>`;
+  if (S.suggest && S.suggest !== P.level) html += `<div class="card ok"><p>${t('suggest_level', { l: S.suggest, name: t('lvl_' + S.suggest) })}</p><div class="row"><button class="btn primary" data-act="acceptlvl">${t('accept')}</button><button class="btn quiet" data-act="declinelvl">${t('decline')}</button></div></div>`;
   const testSlot = plan.slots.find(s => s.test);
   if (testSlot) html += `<div class="card"><p>${t('test_due', { d: dayName(testSlot.day, true) })} <a href="#progress" data-act="gotest" data-w="${w}">${t('go_test')}</a></p></div>`;
   if (plan.dropped) html += `<div class="card warnc"><p>${t('dropped_warn', { n: plan.dropped })}</p></div>`;
@@ -353,7 +356,7 @@ function streakText() {
     if (!need.length && pl.slots.some(s => s.paused)) continue;   // v2.0: a fully paused week neither counts nor breaks the streak
     if (need.length && need.every(s => isDone(w, s.key))) n++; else break;
   }
-  return n ? t('streak', { n }) : '';
+  return n ? tn('streak', n) : '';
 }
 
 /* ---------- session detail ---------- */
@@ -448,7 +451,7 @@ function vPlan() {
       <button class="chip sm" data-act="togrec" data-w="${w}" aria-pressed="${pl.rec}" title="${t('toggle_rec')}">${t('recovery_week').split(' ')[0]}</button></div>`;
   }
   html += `<section class="plist">${rows}</section>
-    <section class="card"><h3>${t('intervals_hdr')}</h3>${P.icuKey ? `<div class="row"><button class="btn" data-act="icusend">${t('icu_send')}</button></div><p class="msg" id="icumsg" aria-live="polite"></p><p class="small muted">${t('icu_send_note')}</p>` : `<p class="small muted">${t('icu_setup')}</p><button class="btn ghost" data-act="go" data-to="settings">${t('settings')}</button>`}</section>
+    <section class="card"><h3>${t('intervals_hdr')}</h3>${P.icuKey ? `<div class="row"><button class="btn primary" data-act="icusend">${t('icu_send')}</button></div><p class="msg" id="icumsg" aria-live="polite"></p><p class="small muted">${t('icu_send_note')}</p>` : `<p class="small muted">${t('icu_setup')}</p><button class="btn ghost" data-act="go" data-to="settings">${t('settings')}</button>`}</section>
     <section class="card"><h3>${t('ics_export')}</h3><div class="row">${[4, 8, 12].map(n => `<button class="btn ghost" data-act="ics" data-n="${n}">${t('ics_weeks', { n })}</button>`).join('')}</div><p class="small muted">${t('ics_note')}</p></section>`;
   return html;
 }
@@ -517,7 +520,7 @@ function libList() {
 function exCard(e, inLib) {
   const L = lang();
   const warn = e.avoid.filter(a => (P.complaints || []).includes(a));
-  const fig = inLib && ANIMV.has(e.id) ? `<button type="button" class="animbtn" data-act="animplay" aria-label="${t('anim_play')} · ${esc(e.n[L])}" aria-pressed="false">${ANIMV.svg(e.id, 'still')}<span class="playic">${IC.play}</span></button>` : ANIMV.svg(e.id);
+  const fig = inLib && ANIMV.has(e.id) ? `<button type="button" class="animbtn" data-act="animplay" aria-label="${t('anim_play')} · ${esc(e.n[L])}" aria-pressed="false">${ANIMV.svg(e.id, 'still')}<span class="playic">${IC.play}</span></button>` : ANIMV.svg(e.id, 'cue');   // v2.3: exercise sheet = option C
   return `<div class="exc">${fig}${ANIMV.isFront(e.id) ? `<small class="muted">${t('front_view')}</small>` : ''}<div class="h"><b>${esc(e.n[L])}</b>${lvlDots(e.lvl)}</div>
     <p class="why">${esc(e.why[L])}</p><ul>${e.cue[L].map(c => `<li>${esc(c)}</li>`).join('')}</ul>
     <dl class="kv sm"><dt>${t('fault')}</dt><dd>${esc(e.fault[L])}</dd><dt>${t('equipment')}</dt><dd>${e.eq.length ? e.eq.map(x => t('eq_' + x)).join(' / ') : '–'}</dd>${e.avoid.length ? `<dt>${t('not_with')}</dt><dd class="${warn.length ? 'warn' : ''}">${e.avoid.map(a => t('cmp_' + a)).join(', ')}</dd>` : ''}</dl></div>`;
@@ -559,7 +562,7 @@ function vSettings() {
     + sec(t('s_app'), `<label class="check"><input type="checkbox" id="f-voice" data-field="voice" ${D.voice !== false ? 'checked' : ''}><span>${t('voice')}</span></label>
         ${voiceSelect(D)}
         <label class="check"><input type="checkbox" id="f-travel" data-field="travelAlways" ${D.travelAlways ? 'checked' : ''}><span>${t('travel_always')}</span></label>`)
-    + `<div class="stick"><button class="btn wide" data-act="savesettings">${t('save')}</button><span class="msg" id="smsg"></span></div>`
+    + `<div class="stick"><button class="btn wide primary" data-act="savesettings">${t('save')}</button><span class="msg" id="smsg"></span></div>`
     + sec(t('pause'), P.paused ? `<button class="btn" data-act="resume">${t('resume')}</button>` : `<button class="btn quiet" data-act="pause">${t('pause')}</button>`)
     + sec(t('intervals_hdr'), `<p class="small muted">${t('icu_lead')}</p>
         <label class="fld"><span class="lbl">${t('icu_key')}</span><input id="f-icukey" type="password" autocomplete="off" data-field="icuKey" value="${esc(D.icuKey || '')}"></label>
@@ -605,7 +608,8 @@ addEventListener('hashchange', () => { UI.resetArmed = false; if (location.hash 
 
 /* ---------- sheet ---------- */
 function sheet(html) {
-  const d = $('#sheet'); $('#sheetin').innerHTML = `<div class="grab"></div>${html}<button class="btn quiet wide" data-act="closesheet">${t('close')}</button>`;
+  // v2.3: one sheet pattern – close (✕, 44 px) top right; a sheet's main action sits fixed at the bottom (.sheetact); backdrop tap and Esc also close
+  const d = $('#sheet'); $('#sheetin').innerHTML = `<button class="iconbtn sheetx" data-act="closesheet" aria-label="${t('close')}">${IC.x}</button>${html}`;
   if (d.showModal) { if (!d.open) d.showModal(); } else d.setAttribute('open', '');
 }
 const closeSheet = () => { const d = $('#sheet'); if (d.open) d.close(); };
@@ -714,7 +718,7 @@ function render() {
   if (s.kind === 'work') {
     const e = EXMAP[s.id];
     mid = `<div class="kind">${t('blk_' + s.blk)}${s.side ? ' · ' + (s.side === 'L' ? t('g_left') : t('g_right')) : ''}</div>
-      ${ANIMV.svg(s.id, 'gfig', { tight: true })}<div class="num"><span class="big${ANIMV.has(s.id) ? ' sm' : ''}">${s.timed ? left : s.dose.n}</span><span class="unit">${s.timed ? t('sec') : t('reps')}</span></div>
+      ${ANIMV.svg(s.id, 'gfig cue cap', { tight: true, secs: !s.timed })}<div class="num"><span class="big${ANIMV.has(s.id) ? ' sm' : ''}">${s.timed ? left : s.dose.n}</span><span class="unit">${s.timed ? t('sec') : t('reps')}</span></div>
       <div class="exn">${esc(exName(s.id))}</div>${s.cue ? `<div class="cue icue">${esc(t(s.cue))}</div>` : ''}<div class="cue">${esc(e.cue[lang()][0])}</div>
       ${nextWork && nextWork.id !== s.id ? `<div class="nxt">${t('g_upnext')}: ${esc(exName(nextWork.id))}</div>` : ''}`;
     if (!s.timed) act = `<button class="gdone" data-act="gnext">${t('g_done_btn')}</button>`;   // fixed place, full width, above the bottom bar
@@ -731,7 +735,7 @@ function render() {
     : `<div class="gbar"><i style="width:${pct}%"></i></div>`;
   el.innerHTML = `<div class="gtop">${bar}<div class="gt"><button class="gstopt" data-act="gstop">${IC.x}<span>${t('g_stop')}</span></button><span class="gmeta">${rd ? rd + ' · ' : ''}${esc(t('type_' + G.r.ses.type))}</span><span class="gcount" aria-label="${t('g_count', { a: exN, b: tot })}">${exN}/${tot}</span>
       <button class="gicon" data-act="gvoice" aria-label="${t('g_voice')}">${P.voice === false ? IC.mute : IC.sound}</button></div></div>
-    <div class="gmid ${s.kind === 'work' ? 'gm-work' : 'gm-rest'}">${mid}${restAdj}</div>
+    <div class="gmid ${s.kind === 'work' ? 'gm-work' : 'gm-rest'}${G.flash ? ' gin' : ''}">${mid}${restAdj}</div>
     <div class="gfoot${act ? ' two' : ''}">${act}<div class="gbtns"><button data-act="gback" ${prevWork() < 0 ? 'disabled' : ''}>${IC.left}<span>${t('g_back')}</span></button><button class="main" data-act="gpause">${G.paused ? t('g_resume') : t('g_pause')}</button><button data-act="gnext"><span>${t('g_skip')}</span>${IC.right}</button></div></div>`;
   if (G.flash) {
     G.flash = false; const f = document.createElement('div'); f.className = 'gflash'; f.setAttribute('aria-hidden', 'true'); el.appendChild(f);
@@ -1033,7 +1037,7 @@ document.addEventListener('click', ev => {
       UI.restoreCand = r;
       if (!P) { doRestore(); break; }
       sheet(`<h3>${t('rs_q_title')}</h3><p>${t('rs_q', { d: r.at ? DN.fmtY(DN.parse(r.at)) : '?', n: r.profile.name ? ` (${esc(r.profile.name)})` : '' })}</p>
-        <div class="row"><button class="btn" data-act="restorego">${t('rs_yes')}</button><button class="btn quiet" data-act="closesheet">${t('rs_no')}</button></div>`);
+        <div class="sheetact"><div class="row"><button class="btn primary" data-act="restorego">${t('rs_yes')}</button><button class="btn quiet" data-act="closesheet">${t('rs_no')}</button></div></div>`);
       break;
     }
     case 'restorego': closeSheet(); doRestore(); break;

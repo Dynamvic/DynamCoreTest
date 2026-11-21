@@ -36,7 +36,7 @@ function chProgress(c) {
   const td = DN.today();
   return { v, g: +c.g || 1, pct: Math.min(100, v / (+c.g || 1) * 100), state: td < from ? 'future' : td > to ? 'ended' : 'running', daysLeft: Math.max(0, to - td), from, to };
 }
-const kindLabel = c => c.k === 'type' ? t('kind_type', { t: t('typeS_' + c.ty).toLowerCase() }) : t('kind_' + c.k);
+const kindLabel = (c, n) => c.k === 'type' ? tn('kind_type', n, { t: t('typeS_' + c.ty).toLowerCase() }) : tn('kind_' + c.k, n);   // v2.3: singular for 1
 function shareData() {
   const cw = Math.max(1, curWeek()), wk = grpWeek(cw);
   const tot = S.logs.length, min = S.logs.reduce((a, l) => a + logMin(l), 0);
@@ -48,9 +48,9 @@ function shareToken(d) {
 }
 function shareText(d) {
   const L = [`💪 DynamCore · ${d.name}`, `${t('card_week', { n: d.w })}: ${d.wd}/${d.wt} ${t('card_sessions')}`];
-  if (d.s) L.push(`🔥 ${d.s} ${t('card_streak')}`);
-  L.push(`📈 ${d.tot} ${t('card_total')}`);
-  d.ch.forEach(x => L.push(`🏁 ${x.c.t}: ${x.p.v}/${x.p.g} ${kindLabel(x.c)}`));
+  if (d.s) L.push(`🔥 ${d.s} ${tn('card_streak', d.s)}`);
+  L.push(`📈 ${d.tot} ${tn('card_total', d.tot)}`);
+  d.ch.forEach(x => L.push(`🏁 ${x.c.t}: ${x.p.v}/${x.p.g} ${kindLabel(x.c, x.p.g)}`));
   L.push(`#${shareToken(d)}`);
   return L.join('\n');
 }
@@ -78,14 +78,14 @@ async function drawCard(d) {
   x.fillStyle = mute; x.font = `500 32px ${body}`; const s2 = t('card_sessions'); x.fillText(s2, cx - x.measureText(s2).width / 2, cy + r + 80);
   // side stats
   const stat = (y, big, small) => { x.fillStyle = ink; x.font = `800 96px ${disp}`; x.fillText(String(big), 600, y); x.fillStyle = mute; x.font = `500 32px ${body}`; x.fillText(small, 600, y + 48); };
-  stat(560, d.s, t('card_streak')); stat(760, d.tot, t('card_total'));
+  stat(560, d.s, tn('card_streak', d.s)); stat(760, d.tot, tn('card_total', d.tot));
   // challenges
   let y = 960;
   d.ch.slice(0, 2).forEach(({ c, p }) => {
     x.fillStyle = ink; x.font = `700 38px ${disp}`; x.fillText(fit(x, '🏁 ' + c.t, W - 192), 96, y);
     x.fillStyle = soft; roundRect(x, 96, y + 26, W - 192, 30, 15); x.fill();
     x.fillStyle = acc; roundRect(x, 96, y + 26, Math.max(30, (W - 192) * p.pct / 100), 30, 15); x.fill();
-    x.fillStyle = mute; x.font = `500 30px ${body}`; x.fillText(`${p.v} / ${p.g} ${kindLabel(c)}`, 96, y + 100);
+    x.fillStyle = mute; x.font = `500 30px ${body}`; x.fillText(`${p.v} / ${p.g} ${kindLabel(c, p.g)}`, 96, y + 100);
     y += 160;
   });
   x.fillStyle = mute; x.font = `500 26px ${body}`; const ft = 'DynamVic Cycling coach'; x.fillText(ft, W / 2 - x.measureText(ft).width / 2, H - 90);
@@ -103,7 +103,7 @@ async function openShare() {
   shareFile = blob ? new File([blob], 'dynamcore-week.png', { type: 'image/png' }) : null;
   const canFiles = !!(shareFile && navigator.canShare && navigator.canShare({ files: [shareFile] }));
   sheet(`<h3>${t('share_title')}</h3>${shareBlobUrl ? `<img class="sharecard" src="${shareBlobUrl}" alt="${esc(t('share_title'))}">` : ''}
-    <div class="row">${canFiles ? `<button class="btn" data-act="grpshareimg">${t('share_img')}</button>` : ''}<button class="btn ghost" data-act="grpsharetxt">${t('share_txt')}</button><span class="msg" id="shmsg"></span></div>
+    <div class="sheetact"><div class="row">${canFiles ? `<button class="btn primary" data-act="grpshareimg">${t('share_img')}</button>` : ''}<button class="btn ${canFiles ? 'ghost' : 'primary'}" data-act="grpsharetxt">${t('share_txt')}</button><span class="msg" id="shmsg"></span></div></div>
     <p class="small muted">${t(canFiles ? 'share_note' : 'share_fallback')}</p><pre class="itxt" id="shtxt">${esc(shareTxt)}</pre>`);
 }
 
@@ -119,7 +119,7 @@ function addChallenge(code) {
 function grpSection() {
   const list = (S.challenges || []).map(c => ({ c, p: chProgress(c) })).sort((a, b) => a.p.to - b.p.to);
   const row = ({ c, p }) => `<div class="ch"><div class="row between"><b>${esc(c.t)}</b><span class="small muted">${p.state === 'ended' ? t('ch_ended') : p.state === 'future' ? t('ch_not_started', { d: DN.fmt(p.from) }) : t('ch_days_left', { n: p.daysLeft })}</span></div>
-    <div class="prog"><div class="bar"><i style="width:${p.pct}%"></i></div><div class="lbl"><span>${p.v} / ${p.g} ${esc(kindLabel(c))}${p.v >= p.g ? ' · ' + t('ch_done') : ''}</span><span>${DN.fmt(p.from)} – ${DN.fmt(p.to)}</span></div></div>
+    <div class="prog"><div class="bar"><i style="width:${p.pct}%"></i></div><div class="lbl"><span>${p.v} / ${p.g} ${esc(kindLabel(c, p.g))}${p.v >= p.g ? ' · ' + t('ch_done') : ''}</span><span>${DN.fmt(p.from)} – ${DN.fmt(p.to)}</span></div></div>
     <button class="btn tiny quiet" data-act="grprm" data-i="${esc(c.i)}">${t('ch_remove')}</button></div>`;
   return `<section class="card" id="grp"><h3>${t('ch_title')}</h3>${list.length ? list.map(row).join('') : `<p class="small muted">${t('ch_none')}</p>`}
     <div class="row"><input class="search" id="chcode" placeholder="${t('ch_paste_ph')}" autocomplete="off"><button class="btn quiet" data-act="grpadd">${t('ch_add')}</button></div><p class="msg" id="chmsg"></p>
